@@ -101,6 +101,7 @@ def propagate(
     u: Vector,
     U: Vector,
     dx: float,
+    dy: float,
     wl: float,  # wavelength
     dz: float,  # z distance to propagate
     chunk_size: int,  # number of vector entries to load into memory at once
@@ -123,8 +124,9 @@ def propagate(
 
     def propagate_chunk(idx: int, chunk: np.ndarray) -> None:
         fx = fftfreq_chunk(n, idx, chunk_size) / dx
+        fy = fftfreq_chunk(n, idx, chunk_size) / dy
         chunk *= np.exp(-1j * 2 * np.pi / wl * dz) * np.exp(
-            1j * np.pi * wl * dz * (fx**2)
+            1j * np.pi * wl * dz * (fx**2+fy**2)
         )
 
     if not skip_fft:
@@ -134,7 +136,7 @@ def propagate(
         chunk_size,
         propagate_chunk,
     )
-    apply_frequency_cutoff(U, cutoff_frequency, dx, chunk_size)
+    apply_frequency_cutoff(U, cutoff_frequency, dx, dy, chunk_size)
     U.ifft(u)
 
 
